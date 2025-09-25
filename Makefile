@@ -26,4 +26,7 @@ run-cat:
 start-ollama:
 	ollama serve > ollama.log 2>&1 &
 
+setup-key:
+	cp ./id_ed25519 /root/.ssh/id_ed25519
+
 
