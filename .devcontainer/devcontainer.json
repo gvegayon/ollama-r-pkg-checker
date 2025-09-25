@@ -1,14 +1,19 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/cpp
 {
-	"name": "C++",
+	"name": "Ollama Dev Container",
 	"build": {
-		"dockerfile": "Dockerfile"
+		"dockerfile": "Containerfile",
+		"args": {
+			"OLLAMA_API_KEY": "${localEnv:OLLAMA_API_KEY}"
+		}
 	},
 	"features": {
 		"ghcr.io/devcontainers/features/github-cli:1": {}
-	}
-
+	},
+	"remoteEnv": {
+		"OLLAMA_API_KEY": "${localEnv:OLLAMA_API_KEY}"
+	},
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 
@@ -22,5 +27,5 @@
 	// "customizations": {},
 
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+	"remoteUser": "root"
 }

@@ -1,0 +1,5 @@
+FROM mcr.microsoft.com/devcontainers/cpp:1-ubuntu-24.04
+
+# Installing ollama
+RUN curl -fsSL https://ollama.com/install.sh | sh
+
