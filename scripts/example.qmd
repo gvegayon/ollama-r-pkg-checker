@@ -78,8 +78,6 @@ response = client.chat(
     think=False # gemma3 doesn't support think
 )
         
-
-response = simple_chat(test_message, model_name=model_name)
 print(f"Question: {test_message}")
 print(f"Response: {response['message']['content']}")
 ```
@@ -91,12 +89,15 @@ Now, we can submit a subsequent question using the same chat context:
 response_cont = client.chat(
     model=model_name,
     messages=[
-        *response['message']
-    {
-        'role': 'user',
-        'content': message,
-    },
-    think='low'
-])
+        *[response['message']],
+        {
+            'role': 'user',
+            'content': 'My background is C++',
+        },
+    ],
+    think=False
+)
+
+print(f"Response: {response_cont['message']['content']}")
 ```
 
