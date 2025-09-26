@@ -3,3 +3,12 @@ FROM mcr.microsoft.com/devcontainers/cpp:1-ubuntu-24.04
 # Installing ollama
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
+# Installing uv for Python package management
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:$PATH"
+
+# Installing Quarto CLI
+RUN wget -O quarto.deb https://github.com/quarto-dev/quarto-cli/releases/download/v1.5.57/quarto-1.5.57-linux-arm64.deb && \
+    dpkg -i quarto.deb && \
+    rm quarto.deb
+

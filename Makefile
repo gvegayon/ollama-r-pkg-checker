@@ -6,6 +6,10 @@ ifndef PKG
 PKG := epiworldR
 endif
 
+ifndef MODEL
+MODEL:= deepseek-r1:7b # deepseek-v3.1:671b-cloud
+endif
+
 run:
 	echo "Download the GitHub repository <https://github.com/$(REPO)>, inspect all its files, and evaluate it using the following checklist:\n" > $(PKG)_query.txt && \
 	echo "<START OF CHECKLIST>" >> $(PKG)_query.txt && \
@@ -21,7 +25,7 @@ run-tidyverse:
  	$(MAKE) run-cat -B
 
 run-cat:
-	ollama run deepseek-v3.1:671b-cloud "$(shell cat $(PKG)_query.txt)"
+	ollama run $(MODEL) "$(shell cat $(PKG)_query.txt)"
 
 start-ollama:
 	ollama serve > ollama.log 2>&1 &

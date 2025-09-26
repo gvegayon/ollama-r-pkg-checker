@@ -1,0 +1,102 @@
+---
+title: "Ollama R Package Checker - Getting Started"
+format: html
+jupyter: python3
+---
+
+# Ollama R Package Checker
+
+This is a Quarto document demonstrating how to use the `ollama_r_pkg_checker` package interactively.
+
+## Setup
+
+First, let's import our package and check that everything is working:
+
+```{python}
+# Import the package
+from ollama_r_pkg_checker import __version__, __author__
+from ollama_r_pkg_checker.main import hello_ollama
+
+print(f"Package version: {__version__}")
+print(f"Author: {__author__}")
+```
+
+## Basic Functionality
+
+Let's test the basic hello function:
+
+```{python}
+# Run the hello function
+hello_ollama()
+```
+
+## Working with Ollama
+
+Here's how you can interact with Ollama programmatically:
+
+```{python}
+import ollama
+
+try:
+    # Create Ollama client
+    client = ollama.Client()
+    
+    # Try to list models
+    models = client.list()
+    print("Available models:")
+    if models.get('models'):
+        for model in models['models']:
+            print(f"- {model['model']}")
+    else:
+        print("No models found. You can pull a model using: ollama pull llama2")
+        
+except Exception as e:
+    print(f"Error connecting to Ollama: {e}")
+    print("Make sure Ollama is running with: ollama serve")
+```
+
+## Example: Simple Chat (if model available)
+
+```{python}
+
+# Message to send
+test_message = "Hello! Can you tell me about R programming?"
+model_name   = 'qwen3:4b'
+
+# Creating the client
+client = ollama.Client()
+
+# Generate response
+response = client.chat(
+    model='gemma3:4b',
+    messages=[
+        {
+            'role': 'user',
+            'content': test_message,
+        }
+    ],
+    think=False # gemma3 doesn't support think
+)
+        
+
+response = simple_chat(test_message, model_name=model_name)
+print(f"Question: {test_message}")
+print(f"Response: {response['message']['content']}")
+```
+
+Now, we can submit a subsequent question using the same chat context:
+
+```{python}
+# Generate response
+response_cont = client.chat(
+    model=model_name,
+    messages=[
+        *response['message']
+    {
+        'role': 'user',
+        'content': message,
+    },
+    think='low'
+])
+```
+
