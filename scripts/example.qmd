@@ -1,103 +1,97 @@
 ---
-title: "Ollama R Package Checker - Getting Started"
-format: html
+title: "Getting started with Ollama in Python"
+format: gfm
+author: George G Vega Yon
+date: 2025-10-01
 jupyter: python3
 ---
 
-# Ollama R Package Checker
+This document shows how we can use the `ollama` Python package to interact with Ollama models. To run this, it is assumed that you have the ollama server up and running on your local machine (you started `ollama serve` in your terminal), and that you have installed the `ollama` Python package. 
 
-This is a Quarto document demonstrating how to use the `ollama_r_pkg_checker` package interactively.
+You can learn more about ollama and the Python package in the [official documentation](https://ollama.com/docs).
 
-## Setup
+## Building the chat as a model
 
-First, let's import our package and check that everything is working:
+One nice feature of the ollama interface is that we can pass the entire conversation history to the model to use it as context. This is done by passing the previous messages as a list of dictionaries to the `messages` argument of the `client.chat()` method.
 
-```{python}
-# Import the package
-from ollama_r_pkg_checker import __version__, __author__
-from ollama_r_pkg_checker.main import hello_ollama
+The following function, `tell_me_about_r()` is a simple example using the `client.chat()` method to have a conversation with the model about R programming. The function makes three calls to the `client.chat()` method, each time passing the previous messages as context. We will use this as a way to compare the performance of two different models: `deepseek-r1:1.5b` and `tinyllama:1.1b` (both lightweight and easy to run on CPUs).
 
-print(f"Package version: {__version__}")
-print(f"Author: {__author__}")
-```
-
-## Basic Functionality
-
-Let's test the basic hello function:
+To ensure reproducibility, we set the `seed` option to a fixed value. We also set the `temperature` option to 0 to make the model's responses more deterministic.
 
 ```{python}
-# Run the hello function
-hello_ollama()
-```
-
-## Working with Ollama
-
-Here's how you can interact with Ollama programmatically:
-
-```{python}
+#| label: build-model
 import ollama
 
-try:
-    # Create Ollama client
+def tell_me_about_r(
+    model: str,
+    options: dict = { "seed": 124, "temperature": 0 }
+    ) -> None:
+
+    # Function to print the output
+    def print_response(response: dict, query: str) -> None:
+        print(f'\n{"-" * 80}\n[Model: {model}] Response time: {response["total_duration"] / 1e9} seconds\n{"-" * 80}')
+        print(f'Response to the query:\n{query}\n{"-" * 80}')
+        print(response['message']['content'])
+        return None
+
+    # Starting the client
     client = ollama.Client()
-    
-    # Try to list models
-    models = client.list()
-    print("Available models:")
-    if models.get('models'):
-        for model in models['models']:
-            print(f"- {model['model']}")
-    else:
-        print("No models found. You can pull a model using: ollama pull llama2")
-        
-except Exception as e:
-    print(f"Error connecting to Ollama: {e}")
-    print("Make sure Ollama is running with: ollama serve")
+
+    # First response
+    response = client.chat(
+        model=model,
+        messages=[
+            {'role': 'user', 'content': "Can you tell me about R programming?",}
+        ],
+        think=False, # gemma3 doesn't support think
+        options=options
+    )
+
+    # Printing response 1
+    print_response(response, "Can you tell me about R programming?")
+
+    # Second response
+    response2 = client.chat(
+        model=model,
+        messages=[
+            *[response['message']],
+            {'role': 'user', 'content': 'What are the main differences it has with C++? I am thinking of language features that would typically be standard in one and not the other',}
+        ],
+        think=False,
+        options=options
+    )
+
+    # Printing response 2
+    print_response(response2, 'What are the main differences it has with C++? I am thinking of language features that would typically be standard in one and not the other')
+
+    # Third response
+    response3 = client.chat(
+        model=model,
+        messages=[
+            *[response['message']],
+            *[response2['message']],
+            {'role': 'user', 'content': 'Summarize our conversation so far in a few sentences.',}
+        ],
+        think=False,
+        options=options
+    )
+
+    # Printing response 3
+    print_response(response3, "Summarize our conversation so far in a few sentences.")
+
+    return None
 ```
 
-## Example: Simple Chat (if model available)
+## Example: Deepseek-r1:1.5b
 
 ```{python}
-
-# Message to send
-test_message = "Hello! Can you tell me about R programming?"
-model_name   = 'qwen3:4b'
-
-# Creating the client
-client = ollama.Client()
-
-# Generate response
-response = client.chat(
-    model='gemma3:4b',
-    messages=[
-        {
-            'role': 'user',
-            'content': test_message,
-        }
-    ],
-    think=False # gemma3 doesn't support think
-)
-        
-print(f"Question: {test_message}")
-print(f"Response: {response['message']['content']}")
+#| label: deepseek-r1:1.5b
+tell_me_about_r(model = 'deepseek-r1:1.5b')
 ```
 
-Now, we can submit a subsequent question using the same chat context:
+## Example: tinyllama:1.1b
 
 ```{python}
-# Generate response
-response_cont = client.chat(
-    model=model_name,
-    messages=[
-        *[response['message']],
-        {
-            'role': 'user',
-            'content': 'My background is C++',
-        },
-    ],
-    think=False
-)
-
-print(f"Response: {response_cont['message']['content']}")
+#| label: tinyllama:1.1b
+tell_me_about_r(model = 'tinyllama:1.1b')
 ```
-

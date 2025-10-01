@@ -24,7 +24,7 @@
 	// "postCreateCommand": "gcc -v",
 
 	// Configure tool-specific properties.
-	"customizations": {
+	"customizations": {a
 		"vscode": {
 			"extensions": [
 				"ms-python.python",
