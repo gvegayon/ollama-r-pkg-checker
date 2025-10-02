@@ -1,0 +1,65 @@
+---
+title: "Using contextual information with Ollama models in Python"
+format: gfm
+author: George G Vega Yon
+date: 2025-10-01
+jupyter: python3
+---
+
+This document shows how we can use the `ollama` Python package to interact with Ollama models. To run this, it is assumed that you have the ollama server up and running on your local machine (you started `ollama serve` in your terminal), and that you have installed the `ollama` Python package. 
+
+You can learn more about ollama and the Python package in the [official documentation](https://ollama.com/docs).
+
+## Building the chat as a model
+
+```{python}
+#| label: build-model
+import ollama
+
+def check_standards(
+    fn: str,
+    options: dict = { "seed": 124, "temperature": 0},
+    model: str = 'rpkgchkr:latest'
+    ) -> None:
+
+    # Reading the file in fn
+    with open(fn, 'r') as f:
+        file_content = f.read()
+
+    # Concatenating the prompt
+    prompt = f"""
+        <TASK>
+        Please check the following R code for adherence to the "EpiForeSITE style". Use the following points to guide the structure of your review: (a) Check function by function looking into coding style; (b) Do not make any evaluation about possible bugs or other issues that are not included in the "EpiForeSITE style" guide; (c) For each function, provide an overall adherence score (0-100) and a list of issues found. If no issues are found, say "No issues found"; (d) Keep the evaluation concise and to the point. I don't need you to explain the style guide, just point out the issues.\n</TASK>\n:<FILE>\n{file_content}\n</FILE>
+        """
+
+    # Starting the client
+    client = ollama.Client()
+
+    # First response
+    response = client.chat(
+        model=model,
+        messages=[
+            {'role': 'user', 'content': prompt}
+        ],
+        think=False, # gemma3 doesn't support think
+        options=options
+    )
+
+    # Printing response 1
+    print(f'\n{"-" * 80}\n[Model: {model}] Response time: {response["total_duration"] / 1e9} seconds\n{"-" * 80}')
+    print(f'File:\n{fn}\n{"-" * 80}')
+    print(response['message']['content'])
+
+
+    return None
+```
+
+## Example: Inspecting an R script
+
+The R script has five functions. Of these, functions 4 and 5 are not compliant with the EpiForeSITE style guide (tidyverse style). Let's see if the AI can identify these issues:
+
+
+```{python}
+#| label: deepseek-r1:1.5b
+check_standards(fn = '../unannotated_examples.R')
+```

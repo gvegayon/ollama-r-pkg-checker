@@ -14,7 +14,7 @@ You can learn more about ollama and the Python package in the [official document
 
 One nice feature of the ollama interface is that we can pass the entire conversation history to the model to use it as context. This is done by passing the previous messages as a list of dictionaries to the `messages` argument of the `client.chat()` method.
 
-The following function, `tell_me_about_r()` is a simple example using the `client.chat()` method to have a conversation with the model about R programming. The function makes three calls to the `client.chat()` method, each time passing the previous messages as context. We will use this as a way to compare the performance of two different models: `deepseek-r1:1.5b` and `tinyllama:1.1b` (both lightweight and easy to run on CPUs).
+The following function, `tell_me_about_r()` is a simple example using the `client.chat()` method to have a conversation with the model about R programming. The function makes three calls to the `client.chat()` method, each time passing the previous messages as context. We will use this as a way to compare the performance of three different models: `deepseek-r1:1.5b`, `tinyllama:1.1b`, and `qwen2.5-coder:1.5b` (all lightweight and easy to run on CPUs).
 
 To ensure reproducibility, we set the `seed` option to a fixed value. We also set the `temperature` option to 0 to make the model's responses more deterministic.
 
@@ -95,3 +95,11 @@ tell_me_about_r(model = 'deepseek-r1:1.5b')
 #| label: tinyllama:1.1b
 tell_me_about_r(model = 'tinyllama:1.1b')
 ```
+
+## Example: qwen2.5-coder:1.5b
+
+```{python}
+#| label: qwen2.5-coder:1.5b
+tell_me_about_r(model = 'qwen2.5-coder:1.5b')
+```
+
