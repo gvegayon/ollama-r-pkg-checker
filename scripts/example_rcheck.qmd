@@ -50,7 +50,6 @@ def check_standards(
     print(f'File:\n{fn}\n{"-" * 80}')
     print(response['message']['content'])
 
-
     return None
 ```
 

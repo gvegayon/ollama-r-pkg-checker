@@ -1,0 +1,157 @@
+---
+title: "Using contextual information with Ollama models in Python (bis)"
+format: gfm
+author: George G Vega Yon
+date: 2025-10-02
+jupyter: python3
+---
+
+This document shows how we can use the `ollama` Python package to interact with Ollama models. To run this, it is assumed that you have the ollama server up and running on your local machine (you started `ollama serve` in your terminal), and that you have installed the `ollama` Python package. 
+
+To use the cloud models, you need to have an [Ollama account](https://ollama.com/signup) and be logged in using the `ollama login` command in your terminal.
+
+You can learn more about ollama and the Python package in the [official documentation](https://ollama.com/docs).
+
+## Building the chat as a model
+
+This is a second attempt to see if we can get better results by providing more context in the prompt. Now, instead of using a `Modefile`, we provide the context directly as an additional message.
+
+This function uses `../badstyle.md` as the style guide to check against. It is a simple example that only has three rules:
+
+1. Use Camel case for function names.
+2. Use snake case for variable names.
+3. Use `=` for assignment instead of `<-`.
+
+```{python}
+#| label: build-model
+import ollama
+
+def check_standards(
+    fn: str,
+    fn_style: str = '../tidy_functions.md',
+    options: dict = {
+        # Reproducible
+        "seed": 124,
+        "temperature": 0,
+        # Larger context (default is 2048)
+        'num_ctx': 10000,
+        # More conservative options
+        'top_k': 0,
+        'top_p': 0.0,
+    },
+    model: str = 'deepseek-coder:1.3b',
+    think: bool = True
+    ) -> dict:
+    """
+    Function to check if an R script adheres to a given style guide.
+    Args:
+        fn (str): Path to the R script to be checked.
+        fn_style (str): Path to the style guide document.
+        options (dict): Options for the model.
+        model (str): Model to be used.
+        think (bool): Whether to use the think option.
+    Returns:
+        dict: Response from the model.
+    """
+
+    # Reading the file in fn
+    with open(fn, 'r') as f:
+        file_content = f.read()
+
+    with open(fn_style, 'r') as f:
+        style_guide = f.read()
+
+    # Concatenating the prompt
+    prompt = f"""
+        <TASK>
+        Please check the following R code for adherence to the "EpiForeSITE style". Ignore things that are not explicitly in the "EpiForeSITE style" (do not use standards or practices from your knowledge base, only from the EpiForeSITE style). For the response, you can list the functions in a table and the number of issues you found per function. After that table, you can explain the issues with more detail.\n</TASK>\n:<FILE>\n{file_content}\n</FILE>
+        """
+
+    messages = [
+        {
+            'role': 'user',
+            'content': 'Show me the "EpiForeSITE style" guide.'
+        },
+        {
+            'role': 'assistant',
+            'content': f'The following document is the "EpiForeSITE style" guide. This provides general recommendations for writing functions using the R programming language:\n{style_guide}'
+        },
+        {
+            'role': 'user',
+            'content': prompt
+        }
+    ]
+
+    # Starting the client
+    client = ollama.Client()
+
+    # First response
+    response = client.chat(
+        model=model,
+        messages=[
+            *messages,
+            {'role': 'user', 'content': prompt}
+        ],
+        think=think, # gemma3 doesn't support think
+        options=options
+    )
+
+    # Extracting response data. Will use try catch, in case
+    # any of the keys are missing
+    try:
+        response_total_duration = response['total_duration'] / 1e9
+    except KeyError:
+        response_total_duration = 'n/a'
+    
+    try:
+        response_message_content = response['message']['content']
+    except KeyError:
+        response_message_content = 'n/a'
+
+    # Printing response 1
+
+
+    print(f'\n{"-" * 80}\n[Model: {model}] Response time: {response_total_duration} seconds\n{"-" * 80}')
+    print(f'File:\n{fn}\n{"-" * 80}')
+    print(response_message_content)
+
+    return response
+```
+
+# Using deepseek-r1:7b
+
+It turns out that local models for this task are not very good, so we are going to skip them for now.
+
+```{python}
+#| label: deepseek-r1:1.3b
+#| eval: false
+ans = check_standards(
+    fn = '../unannotated_examples.R',
+    fn_style='../badstyle.md',
+    model='deepseek-r1:7b',
+    think=False
+)
+```
+
+# Using the qwen3-coder:480b-cloud model
+
+```{python}
+#| label: deepseek-r1:1.5b
+ans = check_standards(
+    fn = '../unannotated_examples.R',
+    fn_style='../badstyle.md',
+    model='qwen3-coder:480b-cloud',
+    think=False
+    )
+```
+
+
+# Using deepseek-v3.1:671b-cloud
+```{python}
+ans = check_standards(
+    fn = '../unannotated_examples.R',
+    fn_style='../badstyle.md',
+    model='deepseek-v3.1:671b-cloud',
+    think=False
+    )
+```
